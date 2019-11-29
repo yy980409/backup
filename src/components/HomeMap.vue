@@ -1,6 +1,14 @@
 <template>
     <div class="back" >
         <headTop></headTop>
+        <el-collapse-transition>
+            <div v-show="showProgress">
+                <el-progress :percentage="dev_per" :format="format"></el-progress>
+            </div>
+        </el-collapse-transition>
+<!--        用于激活updated函数-->
+        <p v-show="false">{{cc}}</p>
+<!--        -->
         <el-row :gutter="10" style="margin:10px;">
             <el-col :span="19">
 
@@ -201,7 +209,7 @@
 <!--                                <el-button v-on:click="addLine">ADD</el-button>-->
 <!--                                <el-button v-on:click="clear">Clear</el-button>-->
                                 <el-button v-on:click="timeOrder">按时间排序</el-button>
-                                <el-button v-on:click="typeOrder">按订单状态排序</el-button>
+                                <el-button v-on:click="typeOrder">按维修单状态排序</el-button>
 <!--                                <el-button v-on:click="ws">ws</el-button>-->
 <!--                                <el-button v-on:click="send">send</el-button>-->
 
@@ -212,10 +220,11 @@
                                              @mouseenter.native="move(error)"
                                              v-for="(error,index) in errorsCom"
                                              :key=error.error.name+error.error.error
+                                             @click.native="errorClick(error.error.name)"
                                              >
-                                        <p style="color:#ffffff;">{{error.error.area}}设备{{error.error.name}}{{error.error.error}}<br>{{error.error.time}}</p>
+                                        <p style="color:#ffffff;">{{error.error.area}}设备{{error.error.name}}{{error.error.error}}</p>
                                         <br><el-divider></el-divider>
-                                        <p style="font-size: 20px;color: #ffffff">维修状态：{{error.bill.status}}<br>维修员：{{error.bill.repairer}}</p>
+                                        <p style="font-size: 16px;color: #ffffff;line-height:100%">{{error.error.time}}<br>维修状态：{{error.bill.status}}<br>维修员：{{error.bill.repairer}}<br>电话：{{error.bill.repairer}}</p>
                                     </el-card>
                                 </transition-group>
 
@@ -292,11 +301,15 @@
 	const statusOptions = ['在线', '离线', '故障'];
 	let amapManager = new VueAMap.AMapManager();
 	export default {
+		inject:['reload'],
 		components:{
 			headTop,animatedNumber
         },
 		data(){
 			return {
+				showProgress:true,
+				dev_num:0,
+                dev_per:0,
 				formInline:{
 					device_id:null,
 				},
@@ -447,7 +460,9 @@
 					height: 100,     // 信息窗口高度
 					title : "<p style='font-size: 20px;text-align: center;margin-bottom: 5px'>设备状态</p>" , // 信息窗口标题
 				},
-
+                //监测离线
+				connectCount:0,
+                remoteCount:0,
             }
 		},
         created(){
@@ -466,6 +481,9 @@
 
 		},
 		methods: {
+			format(percentage) {
+				return `当前设备加载进度${percentage}%`;
+			},
 			handleCheckAllChange(val) {
 				this.checkedStatus = val ? statusOptions : [];
 				this.isIndeterminate = false;
@@ -560,31 +578,57 @@
 				// massMarks.setMap(o);
 
             },
+			errorClick(val){
+				this.findInMap(val);
+            },
 			send(){
 				console.log("fa送");
 				this.client.send("/app/hello",JSON.stringify({name:"2323",content:"sdasdasd"}),{});
 				console.log("成功");
+            },
+			async connectCounter(){
+			    this.connectCount+=5;
+				const One=await getOneTree();//访问并断开
+				if(this.connectCount-this.remoteCount>=5){
+
+					this.$store.dispatch('logout','注销成功');
+					clearInterval(this.connectTimer);
+					location.reload();
+					this.tikTok(5000);
+					this.$message({
+						type: 'success',
+						message: '该账号在另外的设备登录'
+					});
+                }
             },
 			ws(){
 				let path=testUrl+"/chat";
 				this.socket = new SockJS(path);
 				this.client=Stomp.over(this.socket);
 				var self=this;
+				this.connectTimer=setInterval(this.connectCounter,5000);
 				this.client.connect({},function(frame){
 					console.log("ws连接成功");
-					self.client.subscribe('/user/queue/order',function(greeting){
+					self.client.subscribe('/topic/online',function(greeting){
 						console.log(greeting.body);
+						self.remoteCount+=5;
+					});
+					self.client.subscribe('/user/queue/order',function(greeting){
 						const temp=JSON.parse(greeting.body);
 						const orderStatus=temp["order_status"];
+						const mstaffName=temp["mstaff_name"];
+						const tel=temp["phoneNumber"];
 						const id=temp['id'];
-
+                        console.log(temp);
 						for(var i=0;i<self.errorsCom.length;i++){
 							if(self.errorsCom[i].bill.id===id){
-								self.errorsCom[i].bill.status=orderStatus;break
+								self.errorsCom[i].bill.status=orderStatus;
+								self.errorsCom[i].bill.repairer=mstaffName;
+								self.errorsCom[i].bill.tel=tel;
+
+								break
 							}
 						}
-
-
 					});
 					self.client.subscribe('/user/queue/error/remove',function(greeting){
 						console.log(greeting.body);
@@ -613,13 +657,22 @@
 						console.log(a);
 						//订单
 						getOrder({device_id:a.name}).then(result =>{
-							console.log(result);
+							console.log("result:",result);
 							const Obj={};
 							Obj.error=a;
 							Obj.bill={};
-							Obj.bill.status=result.msg[0].order_status;
-							Obj.bill.id=order.msg[0].id;
-							Obj.bill.repairer='开发中';
+							Obj.bill.status='无维修单';
+							Obj.bill.repairer='无';
+							Obj.bill.tel='无';
+							Obj.bill.id="";
+							result.msg.forEach(item =>{
+								if(item.description===a.error){
+									Obj.bill.status=item.order_status;
+									Obj.bill.repairer=item.mstaff_name;
+									Obj.bill.tel=item.phoneNumber;
+									Obj.bill.id=item.id;
+								}
+							});
 							self.errorsCom.splice(0,0,Obj);
 							if(self.orderFlag){
 								self.typeOrder();
@@ -844,9 +897,22 @@
 					let Obj={};
 					Obj.error=error;
 					Obj.bill={};
-					Obj.bill.status=order.msg[0].order_status;
-					Obj.bill.id=order.msg[0].id;
-					Obj.bill.repairer='开发中';
+					Obj.bill.status='无维修单';
+					Obj.bill.repairer='无';
+					Obj.bill.tel='无';
+					Obj.bill.id='';
+					if(order.status!=='fail'){
+						order.msg.forEach(item =>{
+							if(item.description===error.error){
+								Obj.bill.status=item.order_status;
+								Obj.bill.repairer=item.mstaff_name;
+								Obj.bill.tel=item.phoneNumber;
+								Obj.bill.id=item.id;
+							}
+						});
+                    }
+
+
 					await Etemp.push(Obj);
 				}
 				this.errors=Etemp;
@@ -1000,10 +1066,21 @@
 				this.CCtimer=setInterval(function(){
 					if(self.updateReady&&!self.updateCompeleted){
 						self.cc++;
+						self.dev_per=Number(((self.dev_num/(self.normalState.length+self.offlineState.length+self.errorState.length))*100).toFixed(2));
+					    if(self.dev_per>95){
+					    	self.showProgress=false;
+					    	if(self.showProgress===true){
+								self.$message({
+									message: '设备加载完成',
+									type: 'success'
+								});
+                            }
+
+					    }
 					}else{
 						clearInterval(self.CCtimer);
 					}
-				},1000);
+				},450);
 
                 //tooltip
 				await chart.setOption({
@@ -1459,17 +1536,20 @@
 				// console.log(this.updateReady,this.updateCompeleted);
 				if(this.updateReady&&!this.updateCompeleted){
                     for(var i=0;i<100;i++){
-                    	if(this.nodePointer[this.info[this.ii].area]){
-						let temp={};
-						temp.id=this.info[this.ii].device_id;
-						temp.area_name=this.info[this.ii].device_id;
-						this.nodePointer[this.info[this.ii].area].children.push(temp);
-						this.ii++;
-						if(this.ii===this.info.length){
-							this.updateCompeleted=true;
-						}
-						console.log("haohaohao")
-					    }
+                    	if(this.info[this.ii]!==undefined){
+							if(this.nodePointer[this.info[this.ii].area]){
+								this.dev_num++;
+								let temp={};
+								temp.id=this.info[this.ii].device_id;
+								temp.area_name=this.info[this.ii].device_id;
+								this.nodePointer[this.info[this.ii].area].children.push(temp);
+								this.ii++;
+								if(this.ii===this.info.length){
+									this.updateCompeleted=true;
+								}
+								// console.log("haohaohao")
+							}
+                        }
                     }
 				}
 
@@ -1477,6 +1557,13 @@
 
         },
 		watch: {
+			errorsCom(newval){//右上角框变化
+				var temp=[];
+			    	this.errorsCom.forEach(item =>{
+			    		temp.push(item.error);
+                    });
+			    	this.gridData=temp;
+            },
 			'errors':{
 				handler:async function(val){
 					// this.errorsCom=[];
@@ -1624,7 +1711,7 @@
 
     }
     .cardLine:hover{
-        height: 180px;
+        height: 220px;
     }
     .cardGray{
         transition: all 1s ;

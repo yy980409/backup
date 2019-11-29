@@ -66,13 +66,14 @@
 
                     <el-submenu index="3" v-if="controllerShow">
                         <template slot="title"><i class="el-icon-setting"></i><span slot="title">>设备管理</span></template>
-                        <el-menu-item index="devices" v-if="adminShow"><span slot="title" >> 设备添加</span></el-menu-item>
+                        <el-menu-item index="devices" v-if="adminShow"><span slot="title" >> 设备管理</span></el-menu-item>
                         <el-menu-item index="deviceControl" ><span slot="title" >> 设备批量控制</span></el-menu-item>
 
                     </el-submenu>
                     <el-submenu index="4" v-if="adminShow">
-                        <template slot="title"><i class="el-icon-user-solid"></i><span slot="title">>用户管理</span></template>
-                        <el-menu-item index="user"><span slot="title">> 用户信息</span></el-menu-item>
+                        <template slot="title"><i class="el-icon-user-solid"></i><span slot="title">>系统管理</span></template>
+                        <el-menu-item index="user"><span slot="title">> 用户管理</span></el-menu-item>
+                        <el-menu-item index="areaControl"><span slot="title">> 区域管理</span></el-menu-item>
                     </el-submenu>
 
                 </el-menu>

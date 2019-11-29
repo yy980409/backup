@@ -18,6 +18,7 @@ const recloseSingle = r => require.ensure([], () =>r(require('@/page/recloseSing
 const pm25Luminance = r => require.ensure([], () =>r(require('@/page/pm25Luminance')), 'pm25Luminance');
 const pm25LuminanceSingle = r => require.ensure([], () =>r(require('@/page/pm25LuminanceSingle')), 'pm25LuminanceSingle');
 const deviceControl = r => require.ensure([], () =>r(require('@/page/deviceControl')), 'deviceControl');
+const userInfo = r => require.ensure([], () =>r(require('@/page/userInfo')), 'userInfo');
 
 console.log(store.state.user.role);
 

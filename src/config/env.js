@@ -16,8 +16,8 @@ let fuckUrl = '';
 if (process.env.NODE_ENV === 'development') {
 	baseUrl = '';
     baseImgPath = '/img/';
-    testUrl = "http://139.9.198.72:8082";
-     // testUrl = "http://172.29.100.11:8082";
+    testUrl = "http://172.26.35.188:8082";
+    //   testUrl = "http://172.29.104.4:8082";
     pushUrl = 'http://localhost:8082/#/singleStatus?device_id='
 }else{
 	baseUrl = '//elm.cangdu.org';

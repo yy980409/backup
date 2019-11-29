@@ -19,6 +19,9 @@ const pm25Luminance = r => require.ensure([], () =>r(require('@/page/pm25Luminan
 const pm25LuminanceSingle = r => require.ensure([], () =>r(require('@/page/pm25LuminanceSingle')), 'pm25LuminanceSingle');
 const deviceControl = r => require.ensure([], () =>r(require('@/page/deviceControl')), 'deviceControl');
 const tt = r => require.ensure([], () =>r(require('@/components/powerControl')), 'powerControl');
+const areaControl = r => require.ensure([], () =>r(require('@/page/areaControl')), 'areaControl');
+const userInfo = r => require.ensure([], () =>r(require('@/page/userInfo')), 'userInfo');
+
 
 function deepClone(obj){
     let objClone = Array.isArray(obj)?[]:{};
@@ -104,7 +107,11 @@ const browserR = [
             path: '/pm25LuminanceSingle',
             component: pm25LuminanceSingle,
             meta: ['气象数据','单设备气象数据']
-        },
+        },{
+            path:'/userInfo',
+            component: userInfo,
+            meta:['个人中心']
+        }
 
 
         ]
@@ -130,7 +137,11 @@ const adminTemp=[
     },{
         path: '/user',
         component: user,
-        meta: ['用户管理', '用户信息'],
+        meta: ['系统管理', '用户管理'],
+    },{
+        path: '/areaControl',
+        component: areaControl,
+        meta: ['系统管理', '区域管理'],
     },
 ];
 const adminR = addLimit(controllerR,adminTemp);

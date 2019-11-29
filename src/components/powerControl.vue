@@ -60,17 +60,17 @@
                 <div v-loading="devloading"
                      element-loading-text="设备加载中">
                     <el-card v-loading="beforedevloading"
-                             element-loading-text='请选择分区'
+                             element-loading-text='请点击最下层分区'
                              class="box-card-low"
                              element-loading-spinner="el-icon-s-home">
                         <div slot="header">
                         <span style="display: flex;justify-content: space-around">
                             <p style="font-weight: bold">{{curArea}} 设备号</p>
-                            <p style="font-weight: bold">重合闸状态</p>
+                            <p >重合闸状态</p>
                         </span>
                             <span style="display: flex;margin-top: 15px;">
                                 <el-col :span="6" :offset="3">
-                                    <p style="">分区设备数 :</p>
+                                    <p style="">该分区设备数 :</p>
                                 </el-col>
                                 <el-col :span="6" >
                                     <p style="">{{devList.length}}</p>
@@ -98,6 +98,7 @@
                                 <el-col :span="6" :offset="8">
                                     <p v-for="i in devList"
                                        :key="i.device_id"
+                                       style="font-size: 14px"
                                        :class="{open:i.status==='合',close:i.status==='分'}">
                                         {{i.status}}
                                     </p>
@@ -150,7 +151,7 @@
 <script
 
 >
-    import {getAllTree,getOneTree,getProtectorStatus} from '@/api/getData';
+    import {getAllTree,getOneTree,getProtectorStatus,powerOff,powerOn,reStartPower} from '@/api/getData';
 	export default {
 		name: "powerControl",
 		data(){
@@ -183,6 +184,9 @@
 				loading:true,
 				beforedevloading:true,
 				devloading:false,
+                //更新数据后刷新表
+                refreshData:null,
+                refreshNode:null,
 			}
 		},
 		methods:{
@@ -196,6 +200,8 @@
 			},
 			async handleNodeClick(val,node){//分区框最低级分区按钮事件
 				if(node.isLeaf){
+					this.refreshData=val;
+					this.refreshNode=node;
 					//boxcard-low数据
 					this.curArea=val.area_name;
 					this.beforedevloading=false;
@@ -237,11 +243,34 @@
                 }
 
 			},
-			handlePowerSwitch(val){
+			async handlePowerSwitch(val){
 				console.log(val);
-			},
-			rebootPower(){
-				console.log('weikaifa');
+				if(val===true){//关=>开
+					for(var i=0;i<this.checkedList.length;i++){
+						await powerOn({device_id:this.checkedList[i]});
+                    }
+				}else{
+					for(var i=0;i<this.checkedList.length;i++){
+						await powerOff({device_id:this.checkedList[i]});
+					}
+				}
+				// if(this.refreshData!==null){//更新后刷新
+				// 	const protector=await getProtectorStatus();
+				// 	this.deviceStatus=[];
+				// 	protector.forEach(item =>{
+				// 		const temp={};
+				// 		temp.device_id=item.device_id;
+				// 		temp.area=item.area_id;
+				// 		temp.status=item.sta_H;
+				// 		this.deviceStatus.push(temp);
+				// 	});
+				// 	this.handleNodeClick(this.refreshData,this.refreshNode);
+				// }
+            },
+			async rebootPower(){
+				for(var i=0;i<this.checkedList.length;i++){
+					await reStartPower({device_id:this.checkedList[i]});
+				}
 			},
 			filterNode(value, data,node) {
 				if(!this.initFlag){//数据初始化标志
@@ -370,7 +399,7 @@
     }
     .box-card{
         width: 100%;
-        height: 700px;
+        height: 720px;
         overflow:scroll;
     }
     .box-card2{
@@ -381,7 +410,7 @@
     }
     .box-card-low{
         width: 100%;
-        height: 700px;
+        height: 720px;
     }
     .item {
         margin-bottom: 18px;

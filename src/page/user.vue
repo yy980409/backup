@@ -1,6 +1,7 @@
 <template>
-    <div>
+    <div style="height: 100%">
         <head-top></head-top>
+
         <el-container style="margin-top: 20px">
             <el-header style="height: 60px; width:1000px">
                 <div style="display: inline">
@@ -11,30 +12,30 @@
 
                 </div>
             </el-header>
-            <el-main style="height: 100%">
+            <el-main style="height: 100%;width: 100%">
 
                 <el-table :data="users" v-loading="tableloading" border stripe
-                          size="mini" style="width: 100%">
-                    <el-table-column type="text" prop="username" align="center"
-                                     fixed label="账户" width="200px" ></el-table-column>
+                          size="mini" style="width:1600px">
+                    <el-table-column type="text" prop="username" align="center" fixed
+                                     label="账户" width="100" ></el-table-column>
                     <el-table-column type="text" align="center"
-                                     fixed label="角色权限" width="200px">
+                                     label="角色权限" width="100">
                         <template slot-scope="scope">
                             <div v-html="formatroles(scope.row.roles)"></div>
                         </template>
                     </el-table-column>
 
-                    <el-table-column type="text" align="center"
-                                     fixed label="所属区域" width="200px">
+                    <el-table-column type="text" align="center" prop="areaname"
+                                     label="所属区域" width="100">
                         <template slot-scope="scope">
-                            <div v-html="formatareas(scope.row.areaname)"></div>
+                            <el-button type="primary" size="mini" @click="showAreaTree(scope.row.areaname)">查看</el-button>
                         </template>
                     </el-table-column>
 
                     <el-table-column type="text" prop="description" align="center"
-                                     fixed label="说明" width=""></el-table-column>
+                                      label="说明" width="200"></el-table-column>
                     <el-table-column type="text"  align="center"
-                                     fixed="right" label="操作" width="px">
+                                     fixed="right" label="操作" width="600">
                         <template slot-scope="scope">
                             <el-row>
                                 <el-col :span="6">
@@ -100,101 +101,119 @@
             </div>
         </el-form>
 
-        <el-form :model="user" style="margin: 0px;padding: 0px;">
-            <div style="text-align: left">
+        <!--添加用户-->
+        <div style="text-align: left;height: 100%">
                 <el-dialog :title="editTitle"
-                           style="padding: 0px;"
+                           style="padding: 0px;height: 100%"
                            :close-on-click-modal="false"
                            :visible.sync="addVisible"
                            :append-to-body="true"
                            width="77%">
-                    <el-row>
-                        <el-col>
-                            <div>
-                                <el-form-item label="账户:" label-width="120px" label-position="right" prop="username" >
-                                    <el-input v-model="user.username" prefix-icon="el-icon-edit"
-                                              size="mini" style="width: 150px" ></el-input>
-                                </el-form-item>
-                            </div>
-                        </el-col>
-                        <el-col>
-                            <div>
-                                <el-form-item label="说明:" label-width="120px" label-position="right" prop="description">
-                                    <el-input prefix-icon="el-icon-edit" placeholder="请输入内容"
-                                              size="mini" style="width: 500px" v-model="user.description"></el-input>
-                                </el-form-item>
-                            </div>
-                        </el-col>
-                    </el-row>
-                    <el-row>
-                        <el-col>
-                            <div>
-                                <el-form-item label="角色:" label-width="120px" label-position="right">
-                                    <el-radio-group v-model="selectroles">
-                                        <el-radio border v-for="role in roles" v-if="$store.state.user.name == 'super'?true:(role == '管理员'?false:true) " :label="role" :key="role">{{ role }}</el-radio>
-                                    </el-radio-group>
-                                </el-form-item>
-                            </div>
-                        </el-col>
-                    </el-row>
-                    <el-row>
-                        <el-col>
-                            <div>
-                                <el-form-item label="区域:" label-width="120px" label-position="right">
-                                    <el-checkbox-group v-model="selectareas">
-                                        <el-checkbox border v-for="area in areas" :label="area" :key="area"></el-checkbox>
-                                    </el-checkbox-group>
-                                </el-form-item>
-                            </div>
-                        </el-col>
-                    </el-row>
+                    <el-container style="height: 100%">
+                        <el-aside style="height: 100%;width: 50%">
+                            <el-form :model="user" style="margin: 0px;padding: 0px;height: 100%;">
+                            <el-row>
+                                <el-col>
+                                    <div>
+                                        <el-form-item label="账户:" label-width="120px" label-position="right" prop="username" >
+                                            <el-input v-model="user.username" prefix-icon="el-icon-edit"
+                                                      size="mini" style="width: 150px" ></el-input>
+                                        </el-form-item>
+                                    </div>
+                                </el-col>
+                                <el-col>
+                                    <div>
+                                        <el-form-item label="说明:" label-width="120px" label-position="right" prop="description">
+                                            <el-input prefix-icon="el-icon-edit" placeholder="请输入内容"
+                                                      size="mini" style="width: 100%" v-model="user.description"></el-input>
+                                        </el-form-item>
+                                    </div>
+                                </el-col>
+                            </el-row>
+                            <el-row>
+                                <el-col>
+                                    <div>
+                                        <el-form-item label="角色:" label-width="120px" label-position="right">
+                                            <el-radio-group v-model="selectroles">
+                                                <el-radio border v-for="role in roles" v-if="$store.state.user.name == 'super'?true:(role == '管理员'?false:true) " :label="role" :key="role">{{ role }}</el-radio>
+                                            </el-radio-group>
+                                        </el-form-item>
+                                    </div>
+                                </el-col>
+                            </el-row>
+                            </el-form>
+                        </el-aside>
+                        <el-main style="height: 100%">
+                            <el-header style="padding: 20px 20px 10px;background: #eeeeee;">
+                                所属区域
+                            </el-header>
+                            <el-main>
+                                <Area-Tree ref="treeadd" :change="false" :init="[]" :defa="[]"></Area-Tree>
+                            </el-main>
+                        </el-main>
+                    </el-container>
                     <span slot="footer" class="dialog-footer">
-              <el-button size="mini" @click="cancelEdit">取 消</el-button>
-              <el-button size="mini" type="primary" @click="addsubmit">确 定</el-button>
-            </span>
+                        <el-button size="mini" @click="cancelEdit">取 消</el-button>
+                        <el-button size="mini" type="primary" @click="addsubmit">确 定</el-button>
+                    </span>
                 </el-dialog>
             </div>
-        </el-form>
 
-        <div style="text-align: left">
+        <!--权限分配-->
+        <div style="text-align: left;height: 100%">
             <el-dialog :title="editTitle"
-                       style="padding: 0px;"
+                       style="padding: 0px;height: 100%"
                        :close-on-click-modal="false"
                        :visible.sync="powerVisible"
                        :append-to-body="true"
                        width="77%" @close="clearpower">
-                <el-container>
-                    <el-header style="padding: 20px 20px 10px;background: #eeeeee;">
-                        角色权限
-                    </el-header>
-                    <el-main>
-                        <div>
-                            <el-radio-group v-model="selectroles">
-                                <el-radio border v-for="role in roles" v-if="$store.state.user.name == 'super'?true:(role == '管理员'?false:true)" :label="role" :key="role">{{ role }}</el-radio>
-                            </el-radio-group>
-                        </div>
-                    </el-main>
-                </el-container>
+                <el-container style="height: 100%">
+                    <el-aside style="height: 100%">
+                        <el-header style="padding: 20px 20px 10px;background: #eeeeee;">
+                            角色权限
+                        </el-header>
+                        <el-main>
+                            <div>
+                                <el-radio-group v-model="selectroles">
+                                    <el-radio border v-for="role in roles" v-if="$store.state.user.name == 'super'?true:(role == '管理员'?false:true)" :label="role" :key="role">{{ role }}</el-radio>
+                                </el-radio-group>
+                            </div>
+                        </el-main>
+                    </el-aside>
+                    <el-main style="padding-top: 0px">
+                        <el-container>
+                            <el-header style="padding: 20px 20px 10px;background: #eeeeee;">
+                                所属区域
+                            </el-header>
+                            <el-main>
+                                <Area-Tree ref="tree" :init="[]" :defa="treedefaultarea"></Area-Tree>
+                            </el-main>
+                        </el-container>
 
-                <el-container>
-                    <el-header style="padding: 20px 20px 10px;background: #eeeeee;">
-                        所属区域
-                    </el-header>
-                    <el-main>
-                        <div>
-                            <el-checkbox-group v-model="selectareas">
-                                <el-checkbox border v-for="area in areas" :label="area" :key="area"></el-checkbox>
-                            </el-checkbox-group>
-                        </div>
                     </el-main>
+
                 </el-container>
 
                 <span slot="footer" class="dialog-footer">
-              <el-button size="mini" @click="clearpower">取 消</el-button>
-              <el-button size="mini" type="primary" @click="submitpower">确 定</el-button>
-          </span>
+                    <el-button size="mini" @click="clearpower">取 消</el-button>
+                    <el-button size="mini" type="primary" @click="submitpower">确 定</el-button>
+                </span>
             </el-dialog>
         </div>
+
+        <el-dialog :title="'管辖区域'"
+                   style="padding: 0px;"
+                   :close-on-click-modal="false"
+                   :append-to-body="true"
+                   :visible.sync="AreaVisible"
+                   width="50%">
+                <AreaTree ref="showTree" :init="scopearea" :change="false"></AreaTree>
+            <span slot="footer" class="dialog-footer">
+                <el-button type="primary" size="mini" @click="AreaVisible = false">确定</el-button>
+            </span>
+
+        </el-dialog>
+
     </div>
 </template>
 
@@ -203,6 +222,7 @@
 	import headTop from '../components/headTop';
 	import {testUrl} from '../config/env'
 	import {Message} from 'element-ui';
+	import AreaTree from '../components/area.vue'
 	export default {
 		data(){
 			return{
@@ -218,12 +238,14 @@
 				editVisible: false,
 				addVisible: false,
 				powerVisible: false,
+                AreaVisible: false,
 				user: {
 					username: '',
 					editable: '禁止',
 					description: '',
 					enable: false
 				},
+                scopearea: [],
 				power: [],
 				roles: [],
 				areas: [],
@@ -234,10 +256,11 @@
 				num: null,
 				advanceSearchVisible: false,
 				items: [{}],
+                treedefaultarea:[],
 			}
 		},
 		components:{
-			search,headTop
+			search,headTop,AreaTree
 		},
 		mounted:function () {
 			this.loadusers();
@@ -285,6 +308,7 @@
 			cancelEdit(){
 				this.editVisible = false;
 				this.addVisible = false;
+				this.$refs.treeadd.cleanCheckedNodes();
 				this.clearuser();
 			},
 			submitchange(){
@@ -306,13 +330,14 @@
 			addmeun(){
 				var _this = this;
 				_this.editTitle = "添加账户";
-				_this.selectareas = []
-                _this.selectroles = ''
+				_this.selectareas = [];
+                _this.selectroles = '';
 				_this.clearuser();
 				_this.addVisible = true;
 			},
 			addsubmit(){
 				var _this = this;
+				_this.selectareas=this.$refs.treeadd.getCheckedNodes();
 				if (_this.user.username == ''){
                     Message.error("请输入账户")
                     return
@@ -402,28 +427,37 @@
 				})
 			},
 			showpower(row){
-
 				var _this = this;
 				_this.editTitle="权限分配"
                 this.selectroles = ''
                 this.selectareas = []
                 this.selectroles = row.roles[0].nameZh
+				this.selectareas = [];
                 for(let each in row.areaname){
                 	this.selectareas.push(row.areaname[each])
                 }
 				_this.powerVisible = true;
 				_this.user.username = row.username;
+                for(let i=0;i<row.areaname.length;i++)
+                {
+                    this.treedefaultarea.push(row.areaname[i]);
+                }
+                console.log(this.treedefaultarea)
 			},
 			clearpower(){
 				var _this = this;
 				_this.powerVisible = false;
 				_this.selectroles = [];
+				this.$refs.tree.cleanCheckedNodes();
+                this.treedefaultarea = [];
 			},
 			search(){
 				this.currentpage = 1;
 				this.loadusers();
 			},
 			submitpower(){
+			    let nodes=this.$refs.tree.getCheckedNodes();
+			    console.log(nodes)
 				var _this = this;
 				if (_this.selectareas.length == 0 ){
 					Message.error("请选择至少一个区域")
@@ -433,7 +467,7 @@
 				let param = new URLSearchParams();
 				param.append('rolename',_this.selectroles)
 				param.append('username',_this.user.username)
-				param.append('areaname',_this.selectareas)
+				param.append('areaname',nodes)
 				_this.$axios.post(this.Host+'/basic/AuthorityAllocation',param).then(resp => {
 					console.log(resp)
 					if(resp && resp.data.status==200){
@@ -461,7 +495,15 @@
 					string+=areaname[each]+'<br>'
 				}
 				return string
-			}
+			},
+            showAreaTree(val){
+			    this.scopearea = val;
+                this.AreaVisible = true;
+            },
+            dododo()
+            {
+                this.$refs.showTree.filter("123")
+            }
 		}
 	}
 </script>
@@ -535,4 +577,5 @@
         font-size: 18px;
         color: #ffffff;
     }
+
 </style>

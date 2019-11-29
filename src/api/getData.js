@@ -1,13 +1,17 @@
 import fetch from '@/config/fetch'
 import axios from '@/config/axios'
 
-
+export const getUserInfo = data =>(axios('/basic/getUserMsg',data));
+export const changePassword = data =>(axios('/basic/changePassword',data,'post'));
+export const changeDetail = data =>(axios('/basic/update',data,'post'));
 
 /**
  * 批量控制
  */
 
 export const getProtectorStatus = data =>(axios('/device/remoteControl/protector',data));
+export const getFanStatus = data =>(axios('/device/remoteControl/fan',data));
+
 /**
  * 设备分区树
  */
@@ -308,7 +312,7 @@ export const getOrderCount = data => fetch('/bos/orders/count', data);
  * 获取用户信息
  */
 
-export const getUserInfo = user_id => fetch('/v1/user/' + user_id);
+// export const getUserInfo = user_id => fetch('/v1/user/' + user_id);
 
 /**
  * 获取地址信息

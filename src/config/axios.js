@@ -22,7 +22,7 @@ export default async (url = '',data={},type = '') => {
         return json;
     }
 
-    //POST2
+    //POST2  getAllTree
     if(type==='post2'){
         let json=null;
 
